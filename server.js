@@ -1,84 +1,61 @@
 import express from "express";
-import OpenAI from "openai";
-import dotenv from "dotenv";
 import cors from "cors";
-import pkg from "pg";
-import { v4 as uuidv4 } from "uuid";
-
-dotenv.config();
-
-const { Pool } = pkg;
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+import { randomUUID } from "crypto";
 
 const app = express();
-app.use(express.json());
 app.use(cors());
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.json({ status: "AI Tenant Insights Running" });
+  res.json({ status: "API running" });
 });
 
-app.post("/register-tenant", async (req, res) => {
-  const tenant_id = uuidv4();
-  const api_key = uuidv4();
+/*
+   MCP endpoint
+*/
+app.post("/mcp", async (req, res) => {
+  const { method, params } = req.body;
 
-  await pool.query(
-    "INSERT INTO tenants (tenant_id, name, api_key) VALUES ($1, $2, $3)",
-    [tenant_id, req.body.name, api_key]
-  );
-
-  res.json({ tenant_id, api_key });
-});
-
-app.post("/analyze", async (req, res) => {
-  const { tenant_id, api_key, message } = req.body;
-
-  const result = await pool.query(
-    "SELECT * FROM tenants WHERE tenant_id=$1 AND api_key=$2",
-    [tenant_id, api_key]
-  );
-
-  if (result.rows.length === 0) {
-    return res.status(403).json({ error: "Unauthorized" });
+  if (method === "tools/list") {
+    return res.json({
+      tools: [
+        {
+          name: "analyze_feedback",
+          description: "Analyze tenant feedback and return sentiment and priority",
+          inputSchema: {
+            type: "object",
+            properties: {
+              message: { type: "string" }
+            },
+            required: ["message"]
+          }
+        }
+      ]
+    });
   }
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    response_format: { type: "json_object" },
-    messages: [
-      {
-        role: "system",
-        content: `Return JSON:
-{
-"sentiment":"",
-"priority_level":"",
-"categories":[],
-"summary":"",
-"recommended_action":""
-}`
-      },
-      { role: "user", content: message }
-    ]
-  });
+  if (method === "tools/call") {
+    const { name, arguments: args } = params;
 
-  const analysis = JSON.parse(response.choices[0].message.content);
+    if (name === "analyze_feedback") {
+      const message = args.message;
 
-  await pool.query(
-    "INSERT INTO feedback (tenant_id, message, analysis) VALUES ($1, $2, $3)",
-    [tenant_id, message, analysis]
-  );
+      // Basic demo AI logic (replace later with OpenAI call)
+      return res.json({
+        content: [
+          {
+            type: "text",
+            text: `Feedback received: "${message}". Sentiment: Neutral. Priority: Medium.`
+          }
+        ]
+      });
+    }
+  }
 
-  res.json({ success: true, analysis });
+  res.status(400).json({ error: "Invalid MCP request" });
 });
 
-app.listen(process.env.PORT, () =>
-  console.log("Server running on port " + process.env.PORT)
-);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
