@@ -14,10 +14,19 @@ app.get("/", (req, res) => {
    MCP endpoint
 */
 app.post("/mcp", async (req, res) => {
-  const { method, params } = req.body;
+  const { id, method, params } = req.body;
+
+  // Required JSON-RPC response wrapper
+  const respond = (result) => {
+    res.json({
+      jsonrpc: "2.0",
+      id: id ?? null,
+      result
+    });
+  };
 
   if (method === "tools/list") {
-    return res.json({
+    return respond({
       tools: [
         {
           name: "analyze_feedback",
@@ -40,8 +49,7 @@ app.post("/mcp", async (req, res) => {
     if (name === "analyze_feedback") {
       const message = args.message;
 
-      // Basic demo AI logic (replace later with OpenAI call)
-      return res.json({
+      return respond({
         content: [
           {
             type: "text",
@@ -52,10 +60,12 @@ app.post("/mcp", async (req, res) => {
     }
   }
 
-  res.status(400).json({ error: "Invalid MCP request" });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  res.status(400).json({
+    jsonrpc: "2.0",
+    id: id ?? null,
+    error: {
+      code: -32601,
+      message: "Method not found"
+    }
+  });
 });
