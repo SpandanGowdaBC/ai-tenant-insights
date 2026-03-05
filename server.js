@@ -66,7 +66,7 @@ server.tool(
   }
 );
 
-app.get("/sse", async (req, res) => {
+app.get("/mcp", async (req, res) => {
   transport = new SSEServerTransport("/message", res);
   await server.connect(transport);
 });
