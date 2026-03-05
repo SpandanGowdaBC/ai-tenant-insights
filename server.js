@@ -14,59 +14,33 @@ app.get("/", (req, res) => {
    MCP endpoint
 */
 app.post("/mcp", async (req, res) => {
-  const { id, method, params } = req.body;
-
-  // Required JSON-RPC response wrapper
-  const respond = (result) => {
-    res.json({
-      jsonrpc: "2.0",
-      id: id ?? null,
-      result
-    });
-  };
+  const { method, id } = req.body;
 
   if (method === "tools/list") {
-    return respond({
-      tools: [
-        {
-          name: "analyze_feedback",
-          description: "Analyze tenant feedback and return sentiment and priority",
-          inputSchema: {
-            type: "object",
-            properties: {
-              message: { type: "string" }
-            },
-            required: ["message"]
-          }
-        }
-      ]
-    });
-  }
-
-  if (method === "tools/call") {
-    const { name, arguments: args } = params;
-
-    if (name === "analyze_feedback") {
-      const message = args.message;
-
-      return respond({
-        content: [
+    return res.json({
+      jsonrpc: "2.0",
+      id,
+      result: {
+        tools: [
           {
-            type: "text",
-            text: `Feedback received: "${message}". Sentiment: Neutral. Priority: Medium.`
+            name: "get_tenant_insights",
+            description: "Analyze tenant reviews",
+            input_schema: {
+              type: "object",
+              properties: {
+                property: { type: "string" }
+              }
+            }
           }
         ]
-      });
-    }
+      }
+    });
   }
 
   res.status(400).json({
     jsonrpc: "2.0",
-    id: id ?? null,
-    error: {
-      code: -32601,
-      message: "Method not found"
-    }
+    id,
+    error: { code: -32601, message: "Method not found" }
   });
 });
 
