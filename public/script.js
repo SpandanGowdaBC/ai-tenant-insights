@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const displayTenantId = document.getElementById('display-tenant-id');
     const displayApiKey = document.getElementById('display-api-key');
 
+    const exitBtn = document.getElementById('exit-tenant-btn');
+
     let currentTenantId = null;
     let currentApiKey = null;
     let currentCompanyName = null;
@@ -65,6 +67,28 @@ document.addEventListener('DOMContentLoaded', () => {
             registerBtn.textContent = 'Register Company';
         }
     });
+
+    // Handle Exit Organization
+    if (exitBtn) {
+        exitBtn.addEventListener('click', () => {
+            currentTenantId = null;
+            currentApiKey = null;
+            currentCompanyName = null;
+
+            // Reset UI
+            registrationCard.style.display = 'block';
+            credentialsCard.style.display = 'none';
+            feedbackCard.style.display = 'none';
+
+            companyInput.value = '';
+            feedbackInput.value = '';
+            registerBtn.disabled = false;
+            registerBtn.textContent = 'Register Company';
+
+            // Restore empty state
+            logsContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; margin-top: 2rem; font-style: italic;" id="empty-state">Register your organization and submit feedback on the left to see the AI analysis here.</p>';
+        });
+    }
 
     function createLogEntry(message, sentiment, priority) {
         const entry = document.createElement('div');
