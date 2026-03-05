@@ -113,10 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return entry;
     }
 
-    form.addEventListener('submit', async (e) => {
+    analyzeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const message = input.value.trim();
+        const message = feedbackInput.value.trim();
         if (!message) return;
 
         if (!currentTenantId || !currentApiKey) {
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 logsContainer.insertBefore(newEntry, logsContainer.firstChild);
 
                 // Clear input
-                input.value = '';
+                feedbackInput.value = '';
 
                 // Keep list manageable
                 if (logsContainer.children.length > 5) {
