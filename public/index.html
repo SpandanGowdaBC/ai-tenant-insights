@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="background-elements">
         <div class="blob blob-1"></div>
@@ -19,9 +21,12 @@
     <nav class="navbar">
         <div class="logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
             <span>Tenant<span class="highlight">Insights</span></span>
         </div>
@@ -37,7 +42,8 @@
         <header class="hero">
             <div class="badge">Model Context Protocol Ready</div>
             <h1>Intelligent Property Management <span>Powered by AI</span></h1>
-            <p>Automatically analyze tenant feedback, assign priorities, and detect maintenance emergencies in real-time. Seamlessly connect your ecosystem with our official MCP Server.</p>
+            <p>Automatically analyze tenant feedback, assign priorities, and detect maintenance emergencies in
+                real-time. Seamlessly connect your ecosystem with our official MCP Server.</p>
         </header>
 
         <section class="dashboard">
@@ -46,8 +52,8 @@
                     <h2>Live Feedback Analyzer</h2>
                     <span class="status-indicator">● Active</span>
                 </div>
-                
-                <div class="demo-logs">
+
+                <div class="demo-logs" id="logs-container">
                     <div class="log-entry high-priority">
                         <div class="log-meta">
                             <span class="tenant">Apt 402</span>
@@ -59,7 +65,7 @@
                             <span class="tag tag-critical">Priority: High</span>
                         </div>
                     </div>
-                    
+
                     <div class="log-entry low-priority">
                         <div class="log-meta">
                             <span class="tenant">Apt 114</span>
@@ -105,8 +111,20 @@
                         <li><span>✓</span> Emergency Detection</li>
                     </ul>
                 </div>
+
+                <div class="glass-card input-card">
+                    <h3>Test Analyzer API</h3>
+                    <form id="analyze-form">
+                        <textarea id="feedback-input" placeholder="Enter tenant feedback here..." rows="4"
+                            required></textarea>
+                        <button type="submit" class="btn btn-primary w-100" id="submit-btn">Run Analysis</button>
+                    </form>
+                </div>
             </div>
         </section>
     </main>
+
+    <script src="/script.js"></script>
 </body>
+
 </html>
