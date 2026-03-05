@@ -11,6 +11,10 @@ app.get("/", (req, res) => {
   res.json({ status: "Tenant Insights MCP server running" });
 });
 
+app.get("/.well-known/openai-domain-verification.txt", (req, res) => {
+  res.type("text/plain");
+  res.send("TTtakprO69cDepChf1RsQYg7Nh29B27cDuNfkI2QRDk");
+});
 /* MCP endpoint */
 app.post("/mcp", (req, res) => {
   try {
