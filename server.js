@@ -4,30 +4,37 @@ import cors from "cors";
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json());
 
-/* Root health check */
+/* Health check */
 app.get("/", (req, res) => {
-  res.json({ status: "Tenant Insights MCP running" });
+  res.json({ status: "Tenant Insights MCP server running" });
 });
 
-/* MCP endpoint health */
-app.get("/mcp", (req, res) => {
-  res.json({ status: "MCP endpoint active" });
-});
-
-/* MCP main endpoint */
+/* MCP endpoint */
 app.post("/mcp", (req, res) => {
   try {
+    const { method, id, params } = req.body || {};
 
-    const body = req.body || {};
-    const method = body.method;
-    const id = body.id ?? null;
-    const params = body.params || {};
+    /* 1️⃣ MCP Initialize (required for scanners) */
+    if (method === "initialize") {
+      return res.json({
+        jsonrpc: "2.0",
+        id,
+        result: {
+          protocolVersion: "2024-11-05",
+          capabilities: {
+            tools: {}
+          },
+          serverInfo: {
+            name: "tenant-insights",
+            version: "1.0.0"
+          }
+        }
+      });
+    }
 
-    /*
-    TOOL LIST
-    */
+    /* 2️⃣ Tools list */
     if (method === "tools/list") {
       return res.json({
         jsonrpc: "2.0",
@@ -42,7 +49,7 @@ app.post("/mcp", (req, res) => {
                 properties: {
                   message: {
                     type: "string",
-                    description: "Tenant feedback text"
+                    description: "Tenant feedback message"
                   }
                 },
                 required: ["message"]
@@ -53,26 +60,30 @@ app.post("/mcp", (req, res) => {
       });
     }
 
-    /*
-    TOOL EXECUTION
-    */
+    /* 3️⃣ Tool execution */
     if (method === "tools/call") {
-
-      const tool = params.name;
-      const args = params.arguments || {};
-      const message = args.message || "";
+      const tool = params?.name;
+      const message = params?.arguments?.message || "";
 
       let sentiment = "Neutral";
       let priority = "Medium";
 
       const text = message.toLowerCase();
 
-      if (text.includes("broken") || text.includes("leak") || text.includes("complaint")) {
+      if (
+        text.includes("leak") ||
+        text.includes("broken") ||
+        text.includes("complaint")
+      ) {
         sentiment = "Negative";
         priority = "High";
       }
 
-      if (text.includes("good") || text.includes("great") || text.includes("nice")) {
+      if (
+        text.includes("good") ||
+        text.includes("great") ||
+        text.includes("nice")
+      ) {
         sentiment = "Positive";
         priority = "Low";
       }
@@ -91,15 +102,7 @@ app.post("/mcp", (req, res) => {
       });
     }
 
-    /* Scanner sometimes calls without method */
-    if (!method) {
-      return res.json({
-        jsonrpc: "2.0",
-        id,
-        result: {}
-      });
-    }
-
+    /* Unknown method */
     return res.json({
       jsonrpc: "2.0",
       id,
@@ -110,7 +113,7 @@ app.post("/mcp", (req, res) => {
     });
 
   } catch (err) {
-    console.error("MCP ERROR:", err);
+    console.error(err);
 
     return res.json({
       jsonrpc: "2.0",
