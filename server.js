@@ -29,7 +29,14 @@ const transports = new Map();
 
 server.tool(
   "analyze_feedback",
-  "Analyze tenant feedback sentiment and urgency",
+  {
+    description: "Analyze tenant feedback sentiment and urgency",
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false
+    }
+  },
   {
     message: z.string().describe("Tenant feedback message")
   },
