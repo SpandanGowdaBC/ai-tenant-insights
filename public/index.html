@@ -30,12 +30,6 @@
             </svg>
             <span>Tenant<span class="highlight">Insights</span></span>
         </div>
-        <div class="nav-links">
-            <a href="#">Dashboard</a>
-            <a href="#">Integrations</a>
-            <a href="#">Settings</a>
-            <button class="btn btn-primary">Connect MCP</button>
-        </div>
     </nav>
 
     <main class="container">
@@ -47,78 +41,61 @@
         </header>
 
         <section class="dashboard">
-            <div class="glass-card analyzer-card">
-                <div class="card-header">
-                    <h2>Live Feedback Analyzer</h2>
-                    <span class="status-indicator">● Active</span>
+            <div class="side-panel">
+                <div class="glass-card input-card" id="registration-card">
+                    <h3>Register Organization</h3>
+                    <p class="stat-desc">Register your company to generate an API Key and Tenant ID for analyzing
+                        feedback.</p>
+                    <form id="register-company-form" style="margin-top: 1rem;">
+                        <input type="text" id="company-name-input" placeholder="Organization or Company Name" required
+                            style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 8px; padding: 0.8rem; color: var(--text-primary); margin-bottom: 1rem;">
+                        <button type="submit" class="btn btn-primary w-100" id="register-btn">Register Company</button>
+                    </form>
                 </div>
 
-                <div class="demo-logs" id="logs-container">
-                    <div class="log-entry high-priority">
-                        <div class="log-meta">
-                            <span class="tenant">Apt 402</span>
-                            <span class="time">Just now</span>
-                        </div>
-                        <p class="log-message">"There is a massive water leak coming from the ceiling."</p>
-                        <div class="log-analysis">
-                            <span class="tag tag-negative">Sentiment: Negative</span>
-                            <span class="tag tag-critical">Priority: High</span>
-                        </div>
+                <div class="glass-card info-card" id="tenant-credentials-card" style="display: none;">
+                    <h3>Organization Info</h3>
+                    <div style="margin-bottom: 0.8rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Company Name:</span><br>
+                        <strong id="display-company-name">...</strong>
                     </div>
+                    <div class="endpoint-url"
+                        style="margin-bottom: 0.5rem; display: block; overflow: hidden; text-overflow: ellipsis;">
+                        <span style="font-size: 0.7rem; color: var(--text-secondary);">Tenant ID:</span><br>
+                        <code id="display-tenant-id">...</code>
+                    </div>
+                    <div class="endpoint-url" style="display: block; overflow: hidden; text-overflow: ellipsis;">
+                        <span style="font-size: 0.7rem; color: var(--text-secondary);">API Key:</span><br>
+                        <code id="display-api-key" style="filter: blur(4px); transition: filter 0.2s; cursor: pointer;"
+                            onclick="this.style.filter='none'">...</code>
+                        <div style="font-size: 0.6rem; margin-top: 0.2rem; color:var(--text-secondary);">Click to reveal
+                            API Key</div>
+                    </div>
+                </div>
 
-                    <div class="log-entry low-priority">
-                        <div class="log-meta">
-                            <span class="tenant">Apt 114</span>
-                            <span class="time">10 mins ago</span>
-                        </div>
-                        <p class="log-message">"The new landscaping looks really good and the staff is very nice!"</p>
-                        <div class="log-analysis">
-                            <span class="tag tag-positive">Sentiment: Positive</span>
-                            <span class="tag tag-low">Priority: Low</span>
-                        </div>
-                    </div>
-
-                    <div class="log-entry medium-priority">
-                        <div class="log-meta">
-                            <span class="tenant">Apt 305</span>
-                            <span class="time">1 hour ago</span>
-                        </div>
-                        <p class="log-message">"I am dropping off my rent check later today."</p>
-                        <div class="log-analysis">
-                            <span class="tag tag-neutral">Sentiment: Neutral</span>
-                            <span class="tag tag-medium">Priority: Medium</span>
-                        </div>
-                    </div>
+                <div class="glass-card input-card" id="feedback-input-card" style="display: none;">
+                    <h3>Submit Feedback</h3>
+                    <p class="stat-desc">Test the Live Analyzer for your organization.</p>
+                    <form id="analyze-form" style="margin-top: 1rem;">
+                        <textarea id="feedback-input"
+                            placeholder="Enter tenant feedback here (e.g., 'My heater is broken...')" rows="4"
+                            required></textarea>
+                        <button type="submit" class="btn btn-primary w-100" id="submit-btn" style="margin-top:1rem;">Run
+                            Analysis</button>
+                    </form>
                 </div>
             </div>
 
-            <div class="side-panel">
-                <div class="glass-card stat-card">
-                    <h3>Connection Status</h3>
-                    <div class="stat-value">Online</div>
-                    <p class="stat-desc">Server-Sent Events active</p>
-                    <div class="endpoint-url">
-                        <code>/mcp</code>
-                        <button class="icon-btn">📋</button>
-                    </div>
+            <div class="glass-card analyzer-card">
+                <div class="card-header">
+                    <h2>Analysis Results</h2>
+                    <span class="status-indicator">● Standby</span>
                 </div>
 
-                <div class="glass-card info-card">
-                    <h3>MCP Tool: analyze_feedback</h3>
-                    <ul class="feature-list">
-                        <li><span>✓</span> Sentiment Detection</li>
-                        <li><span>✓</span> Priority Routing</li>
-                        <li><span>✓</span> Emergency Detection</li>
-                    </ul>
-                </div>
-
-                <div class="glass-card input-card">
-                    <h3>Test Analyzer API</h3>
-                    <form id="analyze-form">
-                        <textarea id="feedback-input" placeholder="Enter tenant feedback here..." rows="4"
-                            required></textarea>
-                        <button type="submit" class="btn btn-primary w-100" id="submit-btn">Run Analysis</button>
-                    </form>
+                <div class="demo-logs" id="logs-container">
+                    <p style="color: var(--text-secondary); text-align: center; margin-top: 2rem; font-style: italic;"
+                        id="empty-state">Register your organization and submit feedback on the left to see the AI
+                        analysis here.</p>
                 </div>
             </div>
         </section>

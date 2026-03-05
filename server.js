@@ -15,6 +15,10 @@ const openai = new OpenAI();
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
+
+// Auto-migrate DB schema for company name
+pool.query('ALTER TABLE tenants ADD COLUMN IF NOT EXISTS company_name VARCHAR(255);').catch(e => console.error(e));
+
 const app = express();
 
 app.use(cors());
@@ -32,17 +36,19 @@ app.get("/.well-known/openai-apps-challenge", (req, res) => {
   res.send("TTtakprO69cDepChf1RsQYg7Nh29B27cDuNfkI2QRDk");
 });
 
-app.post("/register-tenant", async (req, res) => {
+app.post("/register-tenant", express.json(), async (req, res) => {
   try {
+    const { company_name } = req.body || {};
     const tenant_id = randomUUID();
     const api_key = "ti_" + randomBytes(24).toString("hex");
+    const final_company_name = company_name || "Demo Company";
 
     await pool.query(
-      "INSERT INTO tenants (tenant_id, api_key) VALUES ($1, $2)",
-      [tenant_id, api_key]
+      "INSERT INTO tenants (tenant_id, api_key, company_name) VALUES ($1, $2, $3)",
+      [tenant_id, api_key, final_company_name]
     );
 
-    res.json({ tenant_id, api_key });
+    res.json({ tenant_id, api_key, company_name: final_company_name });
   } catch (err) {
     console.error("Error registering tenant:", err);
     res.status(500).json({ error: "Database error registering tenant" });

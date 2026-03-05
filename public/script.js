@@ -1,35 +1,70 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('analyze-form');
-    const input = document.getElementById('feedback-input');
-    const logsContainer = document.getElementById('logs-container');
+    const registerForm = document.getElementById('register-company-form');
+    const companyInput = document.getElementById('company-name-input');
+    const registerBtn = document.getElementById('register-btn');
+
+    const analyzeForm = document.getElementById('analyze-form');
+    const feedbackInput = document.getElementById('feedback-input');
     const submitBtn = document.getElementById('submit-btn');
-    const displayTenantId = document.getElementById('display-tenant-id');
+
+    const logsContainer = document.getElementById('logs-container');
     const emptyState = document.getElementById('empty-state');
+
+    const registrationCard = document.getElementById('registration-card');
+    const credentialsCard = document.getElementById('tenant-credentials-card');
+    const feedbackCard = document.getElementById('feedback-input-card');
+
+    const displayCompanyName = document.getElementById('display-company-name');
+    const displayTenantId = document.getElementById('display-tenant-id');
+    const displayApiKey = document.getElementById('display-api-key');
 
     let currentTenantId = null;
     let currentApiKey = null;
+    let currentCompanyName = null;
 
-    async function initializeTenant() {
+    // Handle Company Registration
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const companyName = companyInput.value.trim();
+        if (!companyName) return;
+
+        registerBtn.disabled = true;
+        registerBtn.textContent = 'Registering...';
+
         try {
             const res = await fetch('/register-tenant', {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ company_name: companyName })
             });
+
             const data = await res.json();
             if (data.tenant_id && data.api_key) {
                 currentTenantId = data.tenant_id;
                 currentApiKey = data.api_key;
-                if (displayTenantId) {
-                    displayTenantId.textContent = data.tenant_id;
-                }
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Run Analysis';
-            }
-        } catch (e) {
-            console.error('Failed to register frontend tenant:', e);
-        }
-    }
+                currentCompanyName = data.company_name;
 
-    initializeTenant();
+                // Update UI Display
+                displayCompanyName.textContent = currentCompanyName;
+                displayTenantId.textContent = currentTenantId;
+                displayApiKey.textContent = currentApiKey;
+
+                // Swap Cards
+                registrationCard.style.display = 'none';
+                credentialsCard.style.display = 'block';
+                feedbackCard.style.display = 'block';
+
+                // Allow analysis submits
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Registration failed:', error);
+            alert('Failed to register company. Check console.');
+            registerBtn.disabled = false;
+            registerBtn.textContent = 'Register Company';
+        }
+    });
 
     function createLogEntry(message, sentiment, priority) {
         const entry = document.createElement('div');
@@ -59,13 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         entry.innerHTML = `
             <div class="log-meta">
-                <span class="tenant">Live Input</span>
+                <span class="tenant">${currentCompanyName || 'Organization'} Feedback</span>
                 <span class="time">${timeString}</span>
             </div>
-            <p class="log-message">"${message}"</p>
-            <div class="log-analysis">
-                <span class="tag ${sentimentClass}">Sentiment: ${sentiment}</span>
-                <span class="tag ${priorityTagClass}">Priority: ${priority}</span>
+            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Question / Feedback</div>
+                <p class="log-message" style="margin-bottom: 0;">"${message}"</p>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem;">AI Analysis / Answer</div>
+                <div class="log-analysis">
+                    <span class="tag ${sentimentClass}">Sentiment: ${sentiment}</span>
+                    <span class="tag ${priorityTagClass}">Priority: ${priority}</span>
+                </div>
             </div>
         `;
 
@@ -79,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!message) return;
 
         if (!currentTenantId || !currentApiKey) {
-            alert("Still initializing connection. Please wait a second and try again.");
+            alert("Please register an organization first.");
             return;
         }
 
