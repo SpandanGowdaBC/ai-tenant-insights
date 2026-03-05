@@ -6,9 +6,11 @@ import { z } from "zod";
 import { randomUUID, randomBytes } from "crypto";
 import pg from "pg";
 import dotenv from "dotenv";
+import OpenAI from "openai";
 
 dotenv.config();
 const { Pool } = pg;
+const openai = new OpenAI();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -44,6 +46,56 @@ app.post("/register-tenant", async (req, res) => {
   } catch (err) {
     console.error("Error registering tenant:", err);
     res.status(500).json({ error: "Database error registering tenant" });
+  }
+});
+
+app.post("/analyze", express.json(), async (req, res) => {
+  try {
+    const { tenant_id, api_key, message } = req.body;
+
+    if (!tenant_id || !api_key || !message) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM tenants WHERE tenant_id=$1 AND api_key=$2",
+      [tenant_id, api_key]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `Return JSON:
+{
+"sentiment":"",
+"priority_level":"",
+"categories":[],
+"summary":"",
+"recommended_action":""
+}`
+        },
+        { role: "user", content: message }
+      ]
+    });
+
+    const analysis = JSON.parse(response.choices[0].message.content);
+
+    await pool.query(
+      "INSERT INTO feedback (tenant_id, message, analysis) VALUES ($1, $2, $3)",
+      [tenant_id, message, analysis]
+    );
+
+    res.json({ success: true, analysis });
+  } catch (err) {
+    console.error("Error analyzing feedback:", err);
+    res.status(500).json({ error: "Internal server error during analysis" });
   }
 });
 
