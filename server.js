@@ -24,8 +24,8 @@ const server = new McpServer({
   version: "1.0.0"
 });
 
-// Global state for transport session
-let transport;
+// Maintain map of active transport sessions
+const transports = new Map();
 
 server.tool(
   "analyze_feedback",
@@ -67,15 +67,32 @@ server.tool(
 );
 
 app.get("/mcp", async (req, res) => {
-  transport = new SSEServerTransport("/message", res);
+  const transport = new SSEServerTransport("/message", res);
+  // Store the transport using its generated sessionId
+  transports.set(transport.sessionId, transport);
+
+  // Clean up when connection closes
+  res.on("close", () => {
+    transports.delete(transport.sessionId);
+  });
+
   await server.connect(transport);
 });
 
 app.post("/message", express.json(), async (req, res) => {
+  // Extract sessionId from the query parameter 
+  const sessionId = req.query.sessionId;
+
+  if (!sessionId) {
+    return res.status(400).send("Session ID is required in query parameters.");
+  }
+
+  const transport = transports.get(sessionId);
+
   if (transport) {
     await transport.handlePostMessage(req, res);
   } else {
-    res.status(503).send("SSE connection not established");
+    res.status(404).send("Session not found or connection not established");
   }
 });
 
