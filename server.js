@@ -84,6 +84,12 @@ app.post("/mcp", async (req, res) => {
   });
 });
 
+app.get("/mcp", (req, res) => {
+  res.json({
+    message: "MCP endpoint active. Use POST requests."
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
