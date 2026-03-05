@@ -1,54 +1,45 @@
 import express from "express";
 import cors from "cors";
-import { randomUUID } from "crypto";
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
+/*
+Health check route
+*/
 app.get("/", (req, res) => {
   res.json({ status: "API running" });
 });
 
 /*
-   MCP endpoint
+MCP endpoint
 */
 app.post("/mcp", async (req, res) => {
   const { method, id, params } = req.body;
 
-  // MCP initialization
-  if (method === "initialize") {
-    return res.json({
-      jsonrpc: "2.0",
-      id,
-      result: {
-        protocolVersion: "2024-11-05",
-        capabilities: {
-          tools: {}
-        },
-        serverInfo: {
-          name: "tenant-insights-mcp",
-          version: "1.0.0"
-        }
-      }
-    });
-  }
-
-  // List tools
+  /*
+  tools/list
+  */
   if (method === "tools/list") {
     return res.json({
       jsonrpc: "2.0",
-      id,
+      id: id ?? null,
       result: {
         tools: [
           {
-            name: "get_tenant_insights",
-            description: "Analyze tenant reviews",
-            input_schema: {
+            name: "analyze_feedback",
+            description: "Analyze tenant feedback and return sentiment and priority",
+            inputSchema: {
               type: "object",
               properties: {
-                property: { type: "string" }
-              }
+                message: {
+                  type: "string",
+                  description: "Tenant feedback message"
+                }
+              },
+              required: ["message"]
             }
           }
         ]
@@ -56,27 +47,53 @@ app.post("/mcp", async (req, res) => {
     });
   }
 
-  // Tool execution
+  /*
+  tools/call
+  */
   if (method === "tools/call") {
-    const property = params?.arguments?.property || "unknown";
+    const toolName = params?.name;
+    const args = params?.arguments;
 
-    return res.json({
-      jsonrpc: "2.0",
-      id,
-      result: {
-        content: [
-          {
-            type: "text",
-            text: `Tenant insights for ${property}: Tenants mention good location but complain about maintenance delays.`
-          }
-        ]
+    if (toolName === "analyze_feedback") {
+      const message = args?.message || "";
+
+      // Simple demo analysis logic
+      let sentiment = "Neutral";
+      let priority = "Medium";
+
+      const text = message.toLowerCase();
+
+      if (text.includes("bad") || text.includes("broken") || text.includes("complaint")) {
+        sentiment = "Negative";
+        priority = "High";
       }
-    });
+
+      if (text.includes("good") || text.includes("great") || text.includes("nice")) {
+        sentiment = "Positive";
+        priority = "Low";
+      }
+
+      return res.json({
+        jsonrpc: "2.0",
+        id: id ?? null,
+        result: {
+          content: [
+            {
+              type: "text",
+              text: `Feedback: "${message}"\nSentiment: ${sentiment}\nPriority: ${priority}`
+            }
+          ]
+        }
+      });
+    }
   }
 
-  res.status(400).json({
+  /*
+  unknown method
+  */
+  return res.status(400).json({
     jsonrpc: "2.0",
-    id,
+    id: id ?? null,
     error: {
       code: -32601,
       message: "Method not found"
@@ -84,14 +101,11 @@ app.post("/mcp", async (req, res) => {
   });
 });
 
-app.get("/mcp", (req, res) => {
-  res.json({
-    message: "MCP endpoint active. Use POST requests."
-  });
-});
-
+/*
+Start server
+*/
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
