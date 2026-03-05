@@ -3,7 +3,16 @@ import cors from "cors";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
+import { randomUUID, randomBytes } from "crypto";
+import pg from "pg";
+import dotenv from "dotenv";
 
+dotenv.config();
+const { Pool } = pg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 const app = express();
 
 app.use(cors());
@@ -19,6 +28,23 @@ app.get("/", (req, res) => {
 app.get("/.well-known/openai-apps-challenge", (req, res) => {
   res.type("text/plain");
   res.send("TTtakprO69cDepChf1RsQYg7Nh29B27cDuNfkI2QRDk");
+});
+
+app.post("/register-tenant", async (req, res) => {
+  try {
+    const tenant_id = randomUUID();
+    const api_key = "ti_" + randomBytes(24).toString("hex");
+
+    await pool.query(
+      "INSERT INTO tenants (tenant_id, api_key) VALUES ($1, $2)",
+      [tenant_id, api_key]
+    );
+
+    res.json({ tenant_id, api_key });
+  } catch (err) {
+    console.error("Error registering tenant:", err);
+    res.status(500).json({ error: "Database error registering tenant" });
+  }
 });
 
 // Create MCP Server
