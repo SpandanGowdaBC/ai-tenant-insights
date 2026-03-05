@@ -11,7 +11,7 @@ app.get("/", (req, res) => {
   res.json({ status: "Tenant Insights MCP server running" });
 });
 
-app.get("https://ai-tenant-insights.onrender.com/.well-known/openai-apps-challenge", (req, res) => {
+app.get("/.well-known/openai-apps-challenge", (req, res) => {
   res.type("text/plain");
   res.send("TTtakprO69cDepChf1RsQYg7Nh29B27cDuNfkI2QRDk");
 });
