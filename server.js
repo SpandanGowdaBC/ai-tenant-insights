@@ -7,20 +7,40 @@ app.use(cors());
 app.use(express.json());
 
 /*
-Health check route
+Health check
 */
 app.get("/", (req, res) => {
-  res.json({ status: "API running" });
+  res.json({ status: "Tenant Insights MCP running" });
 });
 
 /*
-MCP endpoint
+MCP endpoint GET (scanner check)
+*/
+app.get("/mcp", (req, res) => {
+  res.json({
+    status: "MCP endpoint active"
+  });
+});
+
+/*
+MCP endpoint POST
 */
 app.post("/mcp", async (req, res) => {
-  const { method, id, params } = req.body;
+  const { jsonrpc, method, id, params } = req.body;
+
+  if (!method) {
+    return res.status(400).json({
+      jsonrpc: "2.0",
+      id: id ?? null,
+      error: {
+        code: -32600,
+        message: "Invalid Request"
+      }
+    });
+  }
 
   /*
-  tools/list
+  Tool list
   */
   if (method === "tools/list") {
     return res.json({
@@ -30,7 +50,7 @@ app.post("/mcp", async (req, res) => {
         tools: [
           {
             name: "analyze_feedback",
-            description: "Analyze tenant feedback and return sentiment and priority",
+            description: "Analyze tenant feedback and determine sentiment and urgency",
             inputSchema: {
               type: "object",
               properties: {
@@ -48,27 +68,34 @@ app.post("/mcp", async (req, res) => {
   }
 
   /*
-  tools/call
+  Tool execution
   */
   if (method === "tools/call") {
-    const toolName = params?.name;
-    const args = params?.arguments;
+    const tool = params?.name;
+    const args = params?.arguments || {};
 
-    if (toolName === "analyze_feedback") {
-      const message = args?.message || "";
+    if (tool === "analyze_feedback") {
+      const message = args.message || "";
 
-      // Simple demo analysis logic
       let sentiment = "Neutral";
       let priority = "Medium";
 
       const text = message.toLowerCase();
 
-      if (text.includes("bad") || text.includes("broken") || text.includes("complaint")) {
+      if (
+        text.includes("broken") ||
+        text.includes("leak") ||
+        text.includes("complaint")
+      ) {
         sentiment = "Negative";
         priority = "High";
       }
 
-      if (text.includes("good") || text.includes("great") || text.includes("nice")) {
+      if (
+        text.includes("good") ||
+        text.includes("great") ||
+        text.includes("nice")
+      ) {
         sentiment = "Positive";
         priority = "Low";
       }
@@ -89,7 +116,7 @@ app.post("/mcp", async (req, res) => {
   }
 
   /*
-  unknown method
+  Unknown method
   */
   return res.status(400).json({
     jsonrpc: "2.0",
