@@ -67,7 +67,13 @@ server.tool(
 );
 
 app.get("/mcp", async (req, res) => {
-  const transport = new SSEServerTransport("/message", res);
+  // Construct the message URL relative to the incoming request to handle proxy paths
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  // Use the exact path /message regardless of where the /mcp request came from
+  const messageUrl = `${protocol}://${host}/message`;
+
+  const transport = new SSEServerTransport(messageUrl, res);
   // Store the transport using its generated sessionId
   transports.set(transport.sessionId, transport);
 
