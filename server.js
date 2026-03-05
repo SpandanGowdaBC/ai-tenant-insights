@@ -14,8 +14,27 @@ app.get("/", (req, res) => {
    MCP endpoint
 */
 app.post("/mcp", async (req, res) => {
-  const { method, id } = req.body;
+  const { method, id, params } = req.body;
 
+  // MCP initialization
+  if (method === "initialize") {
+    return res.json({
+      jsonrpc: "2.0",
+      id,
+      result: {
+        protocolVersion: "2024-11-05",
+        capabilities: {
+          tools: {}
+        },
+        serverInfo: {
+          name: "tenant-insights-mcp",
+          version: "1.0.0"
+        }
+      }
+    });
+  }
+
+  // List tools
   if (method === "tools/list") {
     return res.json({
       jsonrpc: "2.0",
@@ -37,10 +56,31 @@ app.post("/mcp", async (req, res) => {
     });
   }
 
+  // Tool execution
+  if (method === "tools/call") {
+    const property = params?.arguments?.property || "unknown";
+
+    return res.json({
+      jsonrpc: "2.0",
+      id,
+      result: {
+        content: [
+          {
+            type: "text",
+            text: `Tenant insights for ${property}: Tenants mention good location but complain about maintenance delays.`
+          }
+        ]
+      }
+    });
+  }
+
   res.status(400).json({
     jsonrpc: "2.0",
     id,
-    error: { code: -32601, message: "Method not found" }
+    error: {
+      code: -32601,
+      message: "Method not found"
+    }
   });
 });
 
