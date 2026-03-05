@@ -8,9 +8,12 @@ const app = express();
 
 app.use(cors());
 
-/* Health check */
+// Serve frontend files
+app.use(express.static("public"));
+
+/* Root endpoint fallback */
 app.get("/", (req, res) => {
-  res.json({ status: "Tenant Insights MCP server running" });
+  res.sendFile(process.cwd() + "/public/index.html");
 });
 
 app.get("/.well-known/openai-apps-challenge", (req, res) => {
