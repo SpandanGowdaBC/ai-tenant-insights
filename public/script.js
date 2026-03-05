@@ -3,11 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('feedback-input');
     const logsContainer = document.getElementById('logs-container');
     const submitBtn = document.getElementById('submit-btn');
+    const displayTenantId = document.getElementById('display-tenant-id');
+    const emptyState = document.getElementById('empty-state');
 
-    // We can auto-register a template tenant for frontend testing purposes,
-    // or just use a dummy one if the backend requires one.
-    // The current backend needs a valid tenant_id and api_key in the DB.
-    // Let's first register a tenant to use for our frontend session.
     let currentTenantId = null;
     let currentApiKey = null;
 
@@ -20,7 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.tenant_id && data.api_key) {
                 currentTenantId = data.tenant_id;
                 currentApiKey = data.api_key;
-                console.log('Registered demo tenant for frontend session.');
+                if (displayTenantId) {
+                    displayTenantId.textContent = data.tenant_id;
+                }
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Run Analysis';
             }
         } catch (e) {
             console.error('Failed to register frontend tenant:', e);
@@ -108,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const priority = data.analysis.priority_level || 'Medium';
 
                 const newEntry = createLogEntry(message, sentiment, priority);
+
+                if (emptyState && emptyState.parentNode) {
+                    emptyState.remove();
+                }
 
                 // Add to top of the list
                 logsContainer.insertBefore(newEntry, logsContainer.firstChild);
